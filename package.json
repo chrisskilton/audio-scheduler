@@ -1,0 +1,23 @@
+{
+  "name": "audio-scheduler",
+  "version": "0.0.0",
+  "description": "audio-scheduler ===============",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/drvanhalen/audio-scheduler.git"
+  },
+  "author": "Chris Skilton",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/drvanhalen/audio-scheduler/issues"
+  },
+  "homepage": "https://github.com/drvanhalen/audio-scheduler",
+  "dependencies": {
+    "express": "~4.9.7",
+    "hogan-express": "~0.5.2"
+  }
+}
