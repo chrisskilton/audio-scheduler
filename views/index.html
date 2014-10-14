@@ -8,5 +8,23 @@
         <button id="stop">stop</button>
 
         <script src="index.js"></script>
+        <script>
+            document.querySelector('#start').onclick = function(){
+                schedulerApp.start();
+            };
+
+            document.querySelector('#stop').onclick = function(){
+                schedulerApp.stop();
+            };
+
+            schedulerApp.setOscGen(function(context){
+                var freqs = [100,200,300];
+                var osc = context.createOscillator();
+
+                osc.frequency.value = freqs[Math.round(Math.random()*2)];
+
+                return osc;
+            });
+        </script>
     </body>
 </html>
