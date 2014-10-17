@@ -4,8 +4,24 @@
         <title>Audio scheduler</title>
     </head>
     <body>
+        <style type="text/css">
+            .sequencer button {
+                height: 50px;
+                width: 50px;
+            }
+
+            button:focus {
+                outline: 0
+            }
+
+            .sequencer button.active {
+                background-color: #4d4d4d;
+            }
+        </style>
         <button id="start">start</button>
         <button id="stop">stop</button>
+
+        <div class="sequencer"></div>
 
         <script src="index.js"></script>
         <script>
@@ -17,11 +33,30 @@
                 schedulerApp.stop();
             };
 
-            schedulerApp.setOscGen(function(context){
-                var freqs = [100,200,300];
-                var osc = context.createOscillator();
+            var stepButtons = [];
 
-                osc.frequency.value = freqs[Math.round(Math.random()*2)];
+            for(var i = 0; i < 16; i++){
+                stepButtons.push('<button id="'+i+'"></button>');
+            }
+
+            document.querySelector('.sequencer').innerHTML = stepButtons.join('');
+
+            stepButtons = document.querySelectorAll('.sequencer button')
+
+            for(var i = 0; i < stepButtons.length; i++){
+                stepButtons[i].addEventListener('click', function(e){
+                    e.target.classList.toggle('active');
+                });
+            }
+
+            schedulerApp.setOscGen(function(audioData){
+                var currentStep = audioData.beatTime % 16;
+
+                if(!stepButtons[currentStep].classList.contains('active')){
+                    return null;
+                }
+
+                var osc = audioData.context.createOscillator();
 
                 return osc;
             });

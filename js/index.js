@@ -1,9 +1,10 @@
-var schedulerApp = (function(){
+var schedulerApp = (function(options){
     var SCHEDULER_INTERVAL = 50;
     var LOOKAHEAD_DURATION = 0.1;
 
-    var TEMPO = 120;
-    var BEAT_DURATION = 60.0 / TEMPO;
+    var tempo = options.tempo || 200;
+    var beatDuration = 60.0 / tempo;
+
     var NOTE_DURATION = 0.1;
 
     var nextBeatTime = 0.0;
@@ -12,27 +13,42 @@ var schedulerApp = (function(){
     var oscillatorGen;
 
     function incrementBeat(){
-        nextBeatTime += BEAT_DURATION;
+        nextBeatTime += beatDuration;
     }
 
     function setOscGen(func){
         oscillatorGen = func;
     }
 
-    oscillatorGen = function(context){
-        var osc = context.createOscillator();
+    oscillatorGen = function(audioData){
+        var osc = audioData.context.createOscillator();
 
         return osc;
     };
 
     function scheduleSound(oscillator){
+        if(!oscillator){
+            return;
+        }
+
         oscillator.connect(audio.destination);
         oscillator.start(nextBeatTime);
         oscillator.stop(nextBeatTime + NOTE_DURATION);
     }
 
     function setupAudioEvent(){
-        var sound = oscillatorGen(audio);
+        var audioData;
+
+        beatDuration = 60.0 / tempo;
+
+        audioData = {
+            context: audio,
+            tempo: tempo,
+            beatDuration: beatDuration,
+            beatTime: Math.round(nextBeatTime / beatDuration)
+        };
+
+        var sound = oscillatorGen(audioData);
 
         scheduleSound(sound);
     }
@@ -52,7 +68,9 @@ var schedulerApp = (function(){
     }
 
     function start(){
-        clearTimeout(scheduler);
+        if(scheduler){
+            clearTimeout(scheduler);
+        }
         schedule();
     }
 
@@ -60,9 +78,14 @@ var schedulerApp = (function(){
         clearTimeout(scheduler);
     }
 
+    function setTempo(newTempo){
+        tempo = newTempo;
+    }
+
     return {
         start: start,
         stop: stop,
-        setOscGen: setOscGen
+        setOscGen: setOscGen,
+        setTempo: setTempo
     };
-})();
+})({});
