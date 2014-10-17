@@ -2,8 +2,8 @@ var schedulerApp = (function(options){
     var SCHEDULER_INTERVAL = 50;
     var LOOKAHEAD_DURATION = 0.1;
 
-    var tempo = options.tempo || 200;
-    var beatDuration = 60.0 / tempo;
+    var tempo = options.tempo || 120;
+    var beatDuration = 60.0 / tempo / 4;
 
     var NOTE_DURATION = 0.1;
 
@@ -26,20 +26,22 @@ var schedulerApp = (function(options){
         return osc;
     };
 
-    function scheduleSound(oscillator){
-        if(!oscillator){
+    function scheduleSound(soundsToPlay){
+        if(!soundsToPlay || !soundsToPlay.length){
             return;
         }
 
-        oscillator.connect(audio.destination);
-        oscillator.start(nextBeatTime);
-        oscillator.stop(nextBeatTime + NOTE_DURATION);
+        soundsToPlay.forEach(function(soundSource){
+            soundSource.connect(audio.destination);
+            soundSource.start(nextBeatTime);
+            soundSource.stop(nextBeatTime + NOTE_DURATION);
+        });
     }
 
     function setupAudioEvent(){
         var audioData;
 
-        beatDuration = 60.0 / tempo;
+        beatDuration = 60.0 / tempo / 4;
 
         audioData = {
             context: audio,
@@ -82,10 +84,15 @@ var schedulerApp = (function(options){
         tempo = newTempo;
     }
 
+    function getContext(){
+        return audio;
+    }
+
     return {
         start: start,
         stop: stop,
         setOscGen: setOscGen,
-        setTempo: setTempo
+        setTempo: setTempo,
+        getContext: getContext
     };
 })({});

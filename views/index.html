@@ -14,6 +14,14 @@
                 outline: 0
             }
 
+            .sequencer button.current {
+                border-top: 1px solid red;
+            }
+
+            .sequencer button.isbar {
+                border-top: 1px solid blue;
+            }
+
             .sequencer button.active {
                 background-color: #4d4d4d;
             }
@@ -23,7 +31,7 @@
 
         <div class="sequencer"></div>
 
-        <script src="index.js"></script>
+        <script src="js/index.js"></script>
         <script>
             document.querySelector('#start').onclick = function(){
                 schedulerApp.start();
@@ -34,32 +42,105 @@
             };
 
             var stepButtons = [];
+            var kickButtons;
+            var snareButtons;
 
             for(var i = 0; i < 16; i++){
-                stepButtons.push('<button id="'+i+'"></button>');
+                stepButtons.push('<button class="kick" id="'+i+'"></button>');
             }
 
             document.querySelector('.sequencer').innerHTML = stepButtons.join('');
 
-            stepButtons = document.querySelectorAll('.sequencer button')
+            stepButtons = [];
+
+            document.querySelector('.sequencer').appendChild(document.createElement('div'));
+
+            for(var i = 0; i < 16; i++){
+                stepButtons.push('<button class="snare" id="'+i+'"></button>');
+            }
+
+            document.querySelector('.sequencer').innerHTML += stepButtons.join('');
+
+            kickButtons = document.querySelectorAll('.sequencer button.kick');
+            snareButtons = document.querySelectorAll('.sequencer button.snare');
 
             for(var i = 0; i < stepButtons.length; i++){
-                stepButtons[i].addEventListener('click', function(e){
+                kickButtons[i].addEventListener('click', function(e){
+                    e.target.classList.toggle('active');
+                });
+
+                snareButtons[i].addEventListener('click', function(e){
                     e.target.classList.toggle('active');
                 });
             }
 
             schedulerApp.setOscGen(function(audioData){
-                var currentStep = audioData.beatTime % 16;
+                var currentStep = audioData.beatTime % 16,
+                    soundsToPlay = [];
 
-                if(!stepButtons[currentStep].classList.contains('active')){
-                    return null;
+                for(var i = 0; i < stepButtons.length; i++){
+                    kickButtons[i].classList.remove('current');
+                    kickButtons[i].classList.remove('isbar');
+                    snareButtons[i].classList.remove('current');
+                    snareButtons[i].classList.remove('isbar');
                 }
 
-                var osc = audioData.context.createOscillator();
+                kickButtons[currentStep].classList.add(currentStep % 4 === 0 ? 'isbar' :'current');
 
-                return osc;
+                if(kickButtons[currentStep].classList.contains('active')){
+                    var kicker = audioData.context.createBufferSource();
+                    kicker.buffer = kickbuffer;
+
+                    soundsToPlay.push(kicker);
+                }
+
+                if(snareButtons[currentStep].classList.contains('active')){
+                    var snarer = audioData.context.createBufferSource();
+                    snarer.buffer = snarebuffer;
+
+                    soundsToPlay.push(snarer);
+                }
+
+                return soundsToPlay;
             });
+
+            var kickbuffer = null;
+
+            function loadKick(context){
+                var request = new XMLHttpRequest();
+
+                request.open('GET', 'kick.wav', true);
+                request.responseType = 'arraybuffer';
+
+                request.onload = function(){
+                    context.decodeAudioData(request.response, function(buffer){
+                        kickbuffer = buffer;
+                    });
+                };
+
+                request.send();
+            }
+
+            loadKick(schedulerApp.getContext());
+
+            var snarebuffer = null;
+
+            function loadSnare(context){
+                var request = new XMLHttpRequest();
+
+                request.open('GET', 'snare.wav', true);
+                request.responseType = 'arraybuffer';
+
+                request.onload = function(){
+                    context.decodeAudioData(request.response, function(buffer){
+                        snarebuffer = buffer;
+                    });
+                };
+
+                request.send();
+            }
+
+            loadSnare(schedulerApp.getContext());
         </script>
     </body>
 </html>

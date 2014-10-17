@@ -5,7 +5,7 @@ var path = require('path');
 var app = express();
 var server = http.createServer(app);
 
-app.use(express.static(path.join(__dirname, 'js')));
+app.use(express.static(path.join(__dirname)));
 
 app.engine('html', require('hogan-express'));
 
