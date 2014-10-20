@@ -31,7 +31,8 @@
 
         <div class="sequencer"></div>
 
-        <script src="js/index.js"></script>
+        <script src="js/scheduler.js"></script>
+        <script src="js/audio.js"></script>
         <script>
             document.querySelector('#start').onclick = function(){
                 schedulerApp.start();
@@ -44,6 +45,8 @@
             var stepButtons = [];
             var kickButtons;
             var snareButtons;
+            var sounds = {};
+            var buffers = {};
 
             for(var i = 0; i < 16; i++){
                 stepButtons.push('<button class="kick" id="'+i+'"></button>');
@@ -64,6 +67,9 @@
             kickButtons = document.querySelectorAll('.sequencer button.kick');
             snareButtons = document.querySelectorAll('.sequencer button.snare');
 
+            sounds.kick = kickButtons;
+            sounds.snare = snareButtons;
+
             for(var i = 0; i < stepButtons.length; i++){
                 kickButtons[i].addEventListener('click', function(e){
                     e.target.classList.toggle('active');
@@ -79,68 +85,33 @@
                     soundsToPlay = [];
 
                 for(var i = 0; i < stepButtons.length; i++){
-                    kickButtons[i].classList.remove('current');
-                    kickButtons[i].classList.remove('isbar');
-                    snareButtons[i].classList.remove('current');
-                    snareButtons[i].classList.remove('isbar');
+                    Object.keys(sounds).forEach(function(key){
+                        sounds[key][i].classList.remove('current');
+                        sounds[key][i].classList.remove('isbar');
+                    });
                 }
 
-                kickButtons[currentStep].classList.add(currentStep % 4 === 0 ? 'isbar' :'current');
+                sounds[Object.keys(sounds)[0]][currentStep].classList.add(currentStep % 4 === 0 ? 'isbar' :'current');
 
-                if(kickButtons[currentStep].classList.contains('active')){
-                    var kicker = audioData.context.createBufferSource();
-                    kicker.buffer = kickbuffer;
+                Object.keys(sounds).forEach(function(key){
+                    if(sounds[key][currentStep].classList.contains('active')){
+                        var source = audioData.context.createBufferSource();
+                        source.buffer = buffers[key];
 
-                    soundsToPlay.push(kicker);
-                }
-
-                if(snareButtons[currentStep].classList.contains('active')){
-                    var snarer = audioData.context.createBufferSource();
-                    snarer.buffer = snarebuffer;
-
-                    soundsToPlay.push(snarer);
-                }
+                        soundsToPlay.push(source);
+                    }
+                });
 
                 return soundsToPlay;
             });
 
-            var kickbuffer = null;
+            AudioHelpers.loadSoundFromUrl('kick.wav', function(buffer){
+                buffers.kick = buffer;
+            });
 
-            function loadKick(context){
-                var request = new XMLHttpRequest();
-
-                request.open('GET', 'kick.wav', true);
-                request.responseType = 'arraybuffer';
-
-                request.onload = function(){
-                    context.decodeAudioData(request.response, function(buffer){
-                        kickbuffer = buffer;
-                    });
-                };
-
-                request.send();
-            }
-
-            loadKick(schedulerApp.getContext());
-
-            var snarebuffer = null;
-
-            function loadSnare(context){
-                var request = new XMLHttpRequest();
-
-                request.open('GET', 'snare.wav', true);
-                request.responseType = 'arraybuffer';
-
-                request.onload = function(){
-                    context.decodeAudioData(request.response, function(buffer){
-                        snarebuffer = buffer;
-                    });
-                };
-
-                request.send();
-            }
-
-            loadSnare(schedulerApp.getContext());
+            AudioHelpers.loadSoundFromUrl('snare.wav', function(buffer){
+                buffers.snare = buffer;
+            });
         </script>
     </body>
 </html>
