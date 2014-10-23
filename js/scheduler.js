@@ -8,7 +8,7 @@ var schedulerApp = (function(options){
     var NOTE_DURATION = 0.1;
 
     var nextBeatTime = 0.0;
-    var scheduler;
+    var timerId;
     var audio = new AudioContext();
     var oscillatorGen;
 
@@ -63,21 +63,26 @@ var schedulerApp = (function(options){
     }
 
     function schedule(){
-        scheduler = setTimeout(function(){
+        if(timerId){
+            clearInterval(timerId);
+        }
+
+        timerId = setInterval(function(){
             scheduleAudioEvents();
             schedule();
         }, SCHEDULER_INTERVAL);
     }
 
     function start(){
-        if(scheduler){
-            clearTimeout(scheduler);
+        if(timerId){
+            clearInterval(timerId);
         }
+
         schedule();
     }
 
     function stop(){
-        clearTimeout(scheduler);
+        clearInterval(timerId);
     }
 
     function setTempo(newTempo){
