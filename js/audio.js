@@ -1,4 +1,4 @@
-AudioHelpers = (function(){
+var Audio = function Audio(){
     var context = new AudioContext();
 
     function loadSoundFromUrl(url, callback){
@@ -28,4 +28,12 @@ AudioHelpers = (function(){
         loadSoundFromUrl: loadSoundFromUrl,
         createSourceFromBuffer: createSourceFromBuffer
     };
-})();
+}
+
+if (typeof define === 'function'){
+    define(function() {
+        return Audio;
+    });
+} else {
+    window.Audio = Audio;
+}
