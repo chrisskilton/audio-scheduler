@@ -1,11 +1,11 @@
-var schedulerApp = (function(options){
+var Scheduler = function Scheduler(options){
     var SCHEDULER_INTERVAL = 50;
     var LOOKAHEAD_DURATION = 0.1;
 
     var tempo = options.tempo || 120;
-    var beatDuration = 60.0 / tempo / 4;
+    var beatDuration = options.beatDuration || 60.0 / tempo / 4;
 
-    var NOTE_DURATION = 0.1;
+    var NOTE_DURATION = options.noteDuration || 0.1;
 
     var nextBeatTime = 0.0;
     var timerId;
@@ -32,16 +32,17 @@ var schedulerApp = (function(options){
         }
 
         soundsToPlay.forEach(function(soundSource){
-            soundSource.connect(audio.destination);
-            soundSource.start(nextBeatTime);
-            soundSource.stop(nextBeatTime + NOTE_DURATION);
+            var gainConnection = soundSource.gain ? soundSource.gain : soundSource;
+            var source = soundSource.source ? soundSource.source : soundSource;
+
+            gainConnection.connect(audio.destination);
+            source.start(nextBeatTime);
+            source.stop(nextBeatTime + NOTE_DURATION);
         });
     }
 
     function setupAudioEvent(){
         var audioData;
-
-        beatDuration = 60.0 / tempo / 4;
 
         audioData = {
             context: audio,
@@ -100,4 +101,12 @@ var schedulerApp = (function(options){
         setTempo: setTempo,
         getContext: getContext
     };
-})({});
+}
+
+if (typeof define === 'function'){
+    define(function() {
+        return Scheduler;
+    });
+} else {
+    window.Scheduler = Scheduler;
+}
