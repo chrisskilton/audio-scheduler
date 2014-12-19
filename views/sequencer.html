@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Audio scheduler</title>
+    </head>
+    <body>
+        <style type="text/css">
+            .sequencer button {
+                height: 50px;
+                width: 50px;
+            }
+
+            button:focus {
+                outline: 0
+            }
+
+            .sequencer button.current {
+                border-top: 1px solid red;
+            }
+
+            .sequencer button.isbar {
+                border-top: 1px solid blue;
+            }
+
+            .sequencer button.active {
+                background-color: #4d4d4d;
+            }
+        </style>
+        <button id="start">start</button>
+        <button id="stop">stop</button>
+
+        <div class="sequencer"></div>
+
+        <script src="js/scheduler.js"></script>
+        <script src="js/audio.js"></script>
+        <script>
+            document.querySelector('#start').onclick = function(){
+                schedulerApp.start();
+            };
+
+            document.querySelector('#stop').onclick = function(){
+                schedulerApp.stop();
+            };
+
+            var sequencerButtons = {};
+
+            var stepButtons = [];
+            var kickButtons;
+            var snareButtons;
+            var sounds = [{
+                name: 'kick',
+                url: 'kick.wav',
+                buffer: null
+            }, {
+                name: 'snare',
+                url: 'snare.wav',
+                buffer: null
+            }];
+
+            var buffers = {};
+
+            sounds.forEach(function(sound){
+                for(var i = 0; i < 16; i++){
+                    stepButtons.push('<button class="'+ sound.name +'" id="'+ i +'"></button>');
+                }
+
+                document.querySelector('.sequencer').innerHTML += stepButtons.join('');
+
+                stepButtons = [];
+
+                document.querySelector('.sequencer').appendChild(document.createElement('div'));
+            });
+
+            sequencerButtons.kick = document.querySelectorAll('.sequencer button.kick');
+            sequencerButtons.snare = document.querySelectorAll('.sequencer button.snare');
+
+            for(var i = 0; i < stepButtons.length; i++){
+                kickButtons[i].addEventListener('click', function(e){
+                    e.target.classList.toggle('active');
+                });
+
+                snareButtons[i].addEventListener('click', function(e){
+                    e.target.classList.toggle('active');
+                });
+            }
+
+            schedulerApp.setOscGen(function(audioData){
+                var currentStep = audioData.beatTime % 16,
+                    soundsToPlay = [];
+
+                for(var i = 0; i < stepButtons.length; i++){
+                    Object.keys(sequencerButtons).forEach(function(key){
+                        sequencerButtons[key][i].classList.remove('current');
+                        sequencerButtons[key][i].classList.remove('isbar');
+                    });
+                }
+
+                sequencerButtons[Object.keys(sequencerButtons)[0]][currentStep].classList.add(currentStep % 4 === 0 ? 'isbar' :'current');
+
+                Object.keys(sequencerButtons).forEach(function(key){
+                    if(sequencerButtons[key][currentStep].classList.contains('active')){
+                        var source = audioData.context.createBufferSource();
+                        source.buffer = buffers[key];
+
+                        soundsToPlay.push(source);
+                    }
+                });
+
+                return soundsToPlay;
+            });
+
+            AudioHelpers.loadSoundFromUrl('kick.wav', function(buffer){
+                buffers.kick = buffer;
+            });
+
+            AudioHelpers.loadSoundFromUrl('snare.wav', function(buffer){
+                buffers.snare = buffer;
+            });
+        </script>
+    </body>
+</html>
