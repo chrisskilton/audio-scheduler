@@ -13,4 +13,17 @@ app.get('/', function(req, res){
     res.render('index.html');
 });
 
-server.listen(3000);
+app.get('/sequencer', function(req, res){
+    res.render('sequencer.html');
+});
+
+app.get('/scheduler', function(req, res){
+    res.render('scheduler.html');
+});
+
+app.use(function(req, res) {
+
+    res.send('unknown route ' + req.url);
+});
+
+server.listen(12345);
