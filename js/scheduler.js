@@ -1,118 +1,132 @@
-var Scheduler = function Scheduler(options){
-    var SCHEDULER_INTERVAL = 50;
-    var LOOKAHEAD_DURATION = 0.1;
-
-    var tempo = options.tempo || 120;
-    var beatDuration = options.beatDuration || 60.0 / tempo / 4;
-
-    var NOTE_DURATION = options.noteDuration || 0.1;
-
-    var nextBeatTime = 0.0;
-    var timerId;
+var scheduler = (function(){
+    var instance;
     var audio = new AudioContext();
-    var oscillatorGen;
 
-    function incrementBeat(){
-        nextBeatTime += beatDuration;
-    }
+    function Scheduler(options){
+        var SCHEDULER_INTERVAL = 50;
+        var LOOKAHEAD_DURATION = 0.1;
 
-    function setOscGen(func){
-        oscillatorGen = func;
-    }
+        var tempo = options.tempo || 120;
+        var beatDuration = options.beatDuration || 60.0 / tempo / 4;
 
-    oscillatorGen = function(audioData){
-        var osc = audioData.context.createOscillator();
+        var NOTE_DURATION = options.noteDuration || 0.1;
 
-        return osc;
-    };
+        var nextBeatTime = 0.0;
+        var timerId;
+        var oscillatorGen;
 
-    function scheduleSound(soundsToPlay){
-        if(!soundsToPlay || !soundsToPlay.length){
-            return;
+        function incrementBeat(){
+            nextBeatTime += beatDuration;
         }
 
-        soundsToPlay.forEach(function(soundSource){
-            var gainConnection = soundSource.gain ? soundSource.gain : soundSource;
-            var source = soundSource.source ? soundSource.source : soundSource;
+        function setOscGen(func){
+            oscillatorGen = func;
+        }
 
-            gainConnection.connect(audio.destination);
-            source.start(nextBeatTime);
-            source.stop(nextBeatTime + NOTE_DURATION);
-        });
-    }
+        oscillatorGen = function(audioData){
+            var osc = audioData.context.createOscillator();
 
-    function setupAudioEvent(){
-        var audioData;
-
-        audioData = {
-            context: audio,
-            tempo: tempo,
-            beatDuration: beatDuration,
-            beatTime: Math.round(nextBeatTime / beatDuration)
+            return osc;
         };
 
-        var sound = oscillatorGen(audioData);
+        function scheduleSound(soundsToPlay){
+            if(!soundsToPlay || !soundsToPlay.length){
+                return;
+            }
 
-        scheduleSound(sound);
-    }
+            soundsToPlay.forEach(function(soundSource){
+                var gainConnection = soundSource.gain ? soundSource.gain : soundSource;
+                var source = soundSource.source ? soundSource.source : soundSource;
 
-    function scheduleAudioEvents(){
-        while(nextBeatTime < audio.currentTime + LOOKAHEAD_DURATION){
-            setupAudioEvent();
-            incrementBeat();
-        }
-    }
-
-    function schedule(){
-        if(timerId){
-            clearInterval(timerId);
+                gainConnection.connect(audio.destination);
+                source.start(nextBeatTime);
+                source.stop(nextBeatTime + NOTE_DURATION);
+            });
         }
 
-        timerId = setInterval(function(){
-            scheduleAudioEvents();
+        function setupAudioEvent(){
+            var audioData;
+
+            audioData = {
+                context: audio,
+                tempo: tempo,
+                beatDuration: beatDuration,
+                beatTime: Math.round(nextBeatTime / beatDuration)
+            };
+
+            var sound = oscillatorGen(audioData);
+
+            scheduleSound(sound);
+        }
+
+        function scheduleAudioEvents(){
+            while(nextBeatTime < audio.currentTime + LOOKAHEAD_DURATION){
+                setupAudioEvent();
+                incrementBeat();
+            }
+        }
+
+        function schedule(){
+            if(timerId){
+                clearInterval(timerId);
+            }
+
+            timerId = setInterval(function(){
+                scheduleAudioEvents();
+                schedule();
+            }, SCHEDULER_INTERVAL);
+        }
+
+        function start(){
+            if(timerId){
+                clearInterval(timerId);
+            }
+
             schedule();
-        }, SCHEDULER_INTERVAL);
-    }
+        }
 
-    function start(){
-        if(timerId){
+        function stop(){
             clearInterval(timerId);
         }
 
-        schedule();
-    }
+        function setTempo(newTempo){
+            tempo = newTempo;
+        }
 
-    function stop(){
-        clearInterval(timerId);
-    }
+        function getContext(){
+            return audio;
+        }
 
-    function setTempo(newTempo){
-        tempo = newTempo;
-    }
+        function remove(){
+            stop();
+            audio = undefined;
+        }
 
-    function getContext(){
-        return audio;
-    }
-
-    function remove(){
-        stop();
-        audio = undefined;
+        return {
+            start: start,
+            stop: stop,
+            setOscGen: setOscGen,
+            setTempo: setTempo,
+            getContext: getContext,
+            remove: remove
+        };
     }
 
     return {
-        start: start,
-        stop: stop,
-        setOscGen: setOscGen,
-        setTempo: setTempo,
-        getContext: getContext,
-        remove: remove
-    };
-}
+        get: function(options) {
+            options = options || {};
 
-if (typeof define === 'function'){
-    define(function() {
-        return Scheduler;
-    });
-} else {
-    window.Scheduler = Scheduler;
-}
+            if (!instance){
+                instance = new Scheduler(options);
+            }
+
+            return instance;
+        },
+        reset: function(options) {
+            instance = undefined;
+            instance = new Scheduler(options);
+
+            return instance;
+        }
+    }
+})();
