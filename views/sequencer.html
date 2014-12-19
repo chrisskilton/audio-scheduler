@@ -34,6 +34,9 @@
         <script src="js/scheduler.js"></script>
         <script src="js/audio.js"></script>
         <script>
+            var schedulerApp = new Scheduler();
+            var audioHelpers = new AudioHelpers();
+
             document.querySelector('#start').onclick = function(){
                 schedulerApp.start();
             };
@@ -109,11 +112,11 @@
                 return soundsToPlay;
             });
 
-            AudioHelpers.loadSoundFromUrl('kick.wav', function(buffer){
+            audioHelpers.loadSoundFromUrl('kick.wav', function(buffer){
                 buffers.kick = buffer;
             });
 
-            AudioHelpers.loadSoundFromUrl('snare.wav', function(buffer){
+            audioHelpers.loadSoundFromUrl('snare.wav', function(buffer){
                 buffers.snare = buffer;
             });
         </script>
