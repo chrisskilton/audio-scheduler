@@ -94,12 +94,18 @@ var Scheduler = function Scheduler(options){
         return audio;
     }
 
+    function remove(){
+        stop();
+        audio = undefined;
+    }
+
     return {
         start: start,
         stop: stop,
         setOscGen: setOscGen,
         setTempo: setTempo,
-        getContext: getContext
+        getContext: getContext,
+        remove: remove
     };
 }
 
