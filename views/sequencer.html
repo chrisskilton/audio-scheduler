@@ -35,7 +35,7 @@
         <script src="js/audio.js"></script>
         <script>
             var schedulerApp = scheduler.get({});
-            var audioHelpers = new AudioHelpers();
+            var audioHelpers = new Audio();
 
             document.querySelector('#start').onclick = function(){
                 schedulerApp.start();
@@ -77,12 +77,12 @@
             sequencerButtons.kick = document.querySelectorAll('.sequencer button.kick');
             sequencerButtons.snare = document.querySelectorAll('.sequencer button.snare');
 
-            for(var i = 0; i < stepButtons.length; i++){
-                kickButtons[i].addEventListener('click', function(e){
+            for(var i = 0; i < 16; i++){
+                sequencerButtons.kick[i].addEventListener('click', function(e){
                     e.target.classList.toggle('active');
                 });
 
-                snareButtons[i].addEventListener('click', function(e){
+                sequencerButtons.snare[i].addEventListener('click', function(e){
                     e.target.classList.toggle('active');
                 });
             }

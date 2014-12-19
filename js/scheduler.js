@@ -23,10 +23,14 @@ var scheduler = (function(){
             oscillatorGen = func;
         }
 
-        oscillatorGen = function(audioData){
-            var osc = audioData.context.createOscillator();
+        function getOscGen() {
+            return oscillatorGen;
+        }
 
-            return osc;
+        oscillatorGen = function(audioData){
+            // return an array of sound sources to play
+            // can be an oscillator
+            // can be an object with source and gain properties
         };
 
         function scheduleSound(soundsToPlay){
@@ -106,6 +110,7 @@ var scheduler = (function(){
             start: start,
             stop: stop,
             setOscGen: setOscGen,
+            getOscGen: getOscGen,
             setTempo: setTempo,
             getContext: getContext,
             remove: remove
