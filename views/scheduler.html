@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Audio scheduler</title>
+    </head>
+    <body>
+        <style type="text/css">
+            .sequencer button {
+                height: 50px;
+                width: 50px;
+            }
+
+            button:focus {
+                outline: 0
+            }
+
+            .sequencer button.current {
+                border-top: 1px solid red;
+            }
+
+            .sequencer button.isbar {
+                border-top: 1px solid blue;
+            }
+
+            .sequencer button.active {
+                background-color: #4d4d4d;
+            }
+        </style>
+        <button id="start">start</button>
+        <button id="stop">stop</button>
+
+        <input id="word" type="text" placeholder="enter a word" />
+        <button id="play">play word</button>
+        <script src="js/scheduler.js"></script>
+        <script src="js/lib/MIDIUtils.js"></script>
+        <script>
+            var schedulerApp = new Scheduler({
+                tempo: 80,
+                beatDuration: 60.0 / 80,
+                noteDuration: 0.5
+            });
+            var alphabet = [
+                'a',
+                'b',
+                'c',
+                'd',
+                'e',
+                'f',
+                'g',
+                'h',
+                'i',
+                'j',
+                'k',
+                'l',
+                'm',
+                'n',
+                'o',
+                'p',
+                'q',
+                'r',
+                's',
+                't',
+                'u',
+                'v',
+                'w',
+                'x',
+                'y',
+                'z'
+            ];
+
+            document.querySelector('#start').onclick = function(){
+                schedulerApp.start();
+            };
+
+            document.querySelector('#stop').onclick = function(){
+                schedulerApp.stop();
+            };
+
+            document.querySelector('#play').onclick = function(){
+                var word = document.querySelector('#word').value;
+                var words = word.split(' ');
+
+                schedulerApp.setOscGen(function(audioData){
+                    var currentStep = audioData.beatTime % words.length;
+                    var notesToPlay = [];
+
+                    for(var i = 0; i < words[currentStep].length; i++){
+                        var osc = audioData.context.createOscillator();
+                        var gain = audioData.context.createGain();
+
+                        osc.frequency.value = MIDIUtils.noteNumberToFrequency(alphabet.indexOf(words[currentStep][i])+60);
+
+                        osc.connect(gain);
+
+                        gain.gain.setValueAtTime(0.0, audioData.context.currentTime);
+                        gain.gain.linearRampToValueAtTime(1.0, audioData.context.currentTime + 0.2);
+                        gain.gain.linearRampToValueAtTime(0.0, audioData.context.currentTime + 0.2 + 0.3);
+
+                        notesToPlay.push({
+                            source: osc,
+                            gain: gain
+                        });
+                    }
+
+                    return notesToPlay;
+                });
+            };
+
+            var notes = [97, 534, 5576, 3771, 1716, 1923, 231];
+
+            schedulerApp.setOscGen(function(audioData){
+                var currentStep = audioData.beatTime % notes.length;
+                var note = notes[currentStep] % 6000;
+
+                var osc = audioData.context.createOscillator();
+
+                osc.frequency.value = note;
+
+                return [osc];
+            });
+        </script>
+    </body>
+</html>
